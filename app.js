@@ -3,13 +3,7 @@ const cors = require('cors');
 const app = express();
 require('dotenv').config();
 const connect = require('./schemas');
-app.use(
-  cors({
-    exposedHeaders: ['authorization'],
-    origin: '*',
-    credentials: 'true',
-  })
-);
+app.use(cors());
 connect();
 app.use(express.urlencoded({ extended: false }));
 app.use(express.json());
