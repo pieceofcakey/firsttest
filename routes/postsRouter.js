@@ -89,7 +89,7 @@ router.get('/:postId', async (req, res) => {
   const { postId } = req.params;
   const post = await Post.findOne({ postId: postId });
   const comments = await Comment.find({ postId: postId });
-  res.json({ post, comments });
+  res.status(200).json({ post, comments });
 });
 
 //게시글 삭제
