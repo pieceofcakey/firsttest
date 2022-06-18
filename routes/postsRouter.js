@@ -63,7 +63,7 @@ router.post(
     const postDate = date + ' ' + hours + ':' + minutes;
     const { nickname, userImage } = res.locals.user;
     const { postTitle, postContent } = req.body;
-    const postImage = 'http://15.164.231.214/' + req.file.filename;
+    const postImage = 'http://3.35.170.203/' + req.file.filename;
 
     await Post.create({
       postTitle,
@@ -129,7 +129,7 @@ router.put(
     const nickname = user.nickname;
     const { postTitle, postContent } = req.body;
     const existPost = await Post.findOne({ postId: postId });
-    const postImage = 'http:15.164.231.214/' + req.file.filename;
+    const postImage = 'http://3.35.170.203/' + req.file.filename;
     console.log(req.file);
     if (nickname === existPost.nickname) {
       if (existPost) {
