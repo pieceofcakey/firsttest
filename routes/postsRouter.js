@@ -74,13 +74,13 @@ router.post(
       userImage,
     });
 
-    res.status(200).json({ success: true });
+    res.status(200).json({ success: true, postImage });
   }
 );
 
 //전체 게시물 조회
 router.get('/', async (req, res) => {
-  const post = await Post.find().sort('postId');
+  const post = await Post.find().sort({ postId: -1 });
   res.send({ post });
 });
 
@@ -88,7 +88,9 @@ router.get('/', async (req, res) => {
 router.get('/:postId', async (req, res) => {
   const { postId } = req.params;
   const post = await Post.findOne({ postId: postId });
-  const comments = await Comment.find({ postId: postId });
+  const comments = await Comment.find({ postId: postId }).sort({
+    commentId: -1,
+  });
   res.status(200).json({ post, comments });
 });
 
@@ -117,7 +119,7 @@ router.delete('/:postId', authMiddleware, async (req, res) => {
   }
 });
 
-//게시글 수정
+// 게시글 수정
 router.put(
   '/:postId',
   authMiddleware,
@@ -137,12 +139,12 @@ router.put(
           { postId: postId },
           { $set: { postTitle, postContent, postImage } }
         );
-        res.status(200).send({ result: 'success' });
+        res.status(200).json({ result: 'success', postImage });
       } else {
         res.status(400).send({ result: 'fail' });
       }
     } else {
-      res.status(400).send({ result: 'fail ' });
+      res.status(400).send({ result: 'fail' });
     }
   }
 );
