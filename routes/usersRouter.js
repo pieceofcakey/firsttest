@@ -57,8 +57,9 @@ router.post('/signup', upload.single('userImage'), async (req, res) => {
       });
     }
     const hashedPassword = await new hash(password, 10);
-    if (req.file) {
-      const userImage = 'http://3.35.170.203/' + req.file.filename;
+    if (!req.file) {
+      const userImage = 'http://3.35.170.203/defaultuserImage1655721219161.png';
+
       const user = await User.create({
         email,
         nickname,
@@ -69,7 +70,7 @@ router.post('/signup', upload.single('userImage'), async (req, res) => {
         .status(200)
         .json({ success: true, message: '회원가입 성공', user, userImage });
     } else {
-      const userImage = 'http://3.35.170.203/defaultuserImage1655721219161.png';
+      const userImage = 'http://3.35.170.203/' + req.file.filename;
       const user = await User.create({
         userImage,
         email,
