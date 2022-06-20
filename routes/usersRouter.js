@@ -33,6 +33,7 @@ const upload = multer({
 });
 
 const userSchema = joi.object({
+  email: joi.string(),
   nickname: joi.string(),
   password: joi.string(),
   passwordCheck: joi.string(),
@@ -41,7 +42,7 @@ const userSchema = joi.object({
 //회원가입
 router.post('/signup', upload.single('userImage'), async (req, res) => {
   try {
-    const { nickname, password, passwordCheck } =
+    const { email, nickname, password, passwordCheck } =
       await userSchema.validateAsync(req.body);
 
     if (password !== passwordCheck) {
@@ -49,10 +50,10 @@ router.post('/signup', upload.single('userImage'), async (req, res) => {
         errormessage: '패스워드가 일치 하지 않습니다',
       });
     }
-    const existingUser = await User.findOne({ nickname: nickname });
+    const existingUser = await User.findOne({ $or: [{ email }, { nickname }] });
     if (existingUser) {
       return res.status(400).send({
-        errormessage: '이미 가입된 닉네임 입니다.',
+        errormessage: '이미 가입된 이메일 또는 닉네임이 있습니다.',
       });
     }
 
@@ -60,6 +61,7 @@ router.post('/signup', upload.single('userImage'), async (req, res) => {
     const userImage = 'http://3.35.170.203/' + req.file.filename;
 
     const user = await User.create({
+      email,
       nickname,
       hashedPassword,
       userImage,
@@ -76,13 +78,13 @@ router.post('/signup', upload.single('userImage'), async (req, res) => {
 // 로그인 기능
 router.post('/login', async (req, res) => {
   try {
-    const { nickname, password } = req.body;
-    const existingUser = await User.findOne({ nickname });
+    const { email, password } = req.body;
+    const existingUser = await User.findOne({ email: email });
 
     const isValid = await compare(password, existingUser.hashedPassword);
     if (!isValid) {
       return res.status(400).send({
-        errormessage: '아이디 또는 비밀번호를 확인해주세요',
+        errormessage: '이메일 또는 비밀번호를 확인해주세요',
       });
     }
     const token = jwt.sign(
@@ -94,7 +96,7 @@ router.post('/login', async (req, res) => {
   } catch (error) {
     console.error(error);
     res.status(400).send({
-      errormessage: '아이디 또는 비밀번호를 확인해주세요',
+      errormessage: '이메일 또는 비밀번호를 확인해주세요',
     });
   }
 });
@@ -106,6 +108,7 @@ router.get('/auth', authMiddleware, async (req, res) => {
     res.status(200).send({
       user: {
         userId: user.userId,
+        email: user.email,
         nickname: user.nickname,
         userImage: user.userImage,
       },

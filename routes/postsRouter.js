@@ -100,18 +100,19 @@ router.delete('/:postId', authMiddleware, async (req, res) => {
   const user = res.locals.user;
 
   const nickname = user.nickname;
-
   const existPost = await Post.findOne({ postId: parseInt(postId) });
-  const existComment = await Comment.find({ postId: postId });
+  const existComment = await Comment.find({ postId: parseInt(postId) });
   console.log('코멘트입니다:', existComment);
+  console.log(nickname);
+  console.log(existPost.nickname);
 
   if (nickname === existPost.nickname) {
     if (existPost && existComment) {
-      await Post.deleteOne({ postId: postId });
-      await Comment.deleteMany({ postId: postId });
+      await Post.deleteOne({ postId: parseInt(postId) });
+      await Comment.deleteMany({ postId: parseInt(postId) });
       res.send({ result: 'success' });
     } else if (existPost) {
-      await Post.deleteOne({ postId: postId });
+      await Post.deleteOne({ postId: parseInt(postId) });
       res.status(200).send({ result: 'success' });
     }
   } else {

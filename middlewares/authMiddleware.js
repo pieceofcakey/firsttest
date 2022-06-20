@@ -27,7 +27,7 @@ module.exports = (req, res, next) => {
         }
       });
   } catch (err) {
-    res.status(400).send({
+    res.status(401).send({
       errorMessage: '로그인 후 이용 가능합니다.',
     });
   }
