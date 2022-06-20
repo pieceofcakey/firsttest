@@ -56,17 +56,30 @@ router.post('/signup', upload.single('userImage'), async (req, res) => {
         errormessage: '이미 가입된 이메일 또는 닉네임이 있습니다.',
       });
     }
-
     const hashedPassword = await new hash(password, 10);
-    const userImage = 'http://3.35.170.203/' + req.file.filename;
-
-    const user = await User.create({
-      email,
-      nickname,
-      hashedPassword,
-      userImage,
-    });
-    res.status(200).json({ success: true, message: '회원가입 성공', user });
+    if (req.file) {
+      const userImage = 'http://3.35.170.203/' + req.file.filename;
+      const user = await User.create({
+        email,
+        nickname,
+        hashedPassword,
+        userImage,
+      });
+      res
+        .status(200)
+        .json({ success: true, message: '회원가입 성공', user, userImage });
+    } else {
+      const userImage = 'http://3.35.170.203/defaultuserImage1655721219161.png';
+      const user = await User.create({
+        userImage,
+        email,
+        nickname,
+        hashedPassword,
+      });
+      res
+        .status(200)
+        .json({ success: true, message: '회원가입 성공', user, userImage });
+    }
   } catch (error) {
     console.log(error);
     res
