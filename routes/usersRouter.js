@@ -57,9 +57,8 @@ router.post('/signup', upload.single('userImage'), async (req, res) => {
       });
     }
     const hashedPassword = await new hash(password, 10);
-    if (!req.file) {
+    if (req.file == undefined) {
       const userImage = 'http://3.35.170.203/defaultuserImage1655721219161.png';
-
       const user = await User.create({
         email,
         nickname,
