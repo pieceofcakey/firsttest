@@ -93,20 +93,26 @@ router.post('/signup', upload.single('userImage'), async (req, res) => {
 router.post('/login', async (req, res) => {
   try {
     const { email, password } = req.body;
-    const existingUser = await User.findOne({ email: email });
+    const user = await User.findOne({ email: email });
 
-    const isValid = await compare(password, existingUser.hashedPassword);
+    const isValid = await compare(password, user.hashedPassword);
     if (!isValid) {
       return res.status(400).send({
         errormessage: '이메일 또는 비밀번호를 확인해주세요',
       });
     }
     const token = jwt.sign(
-      { userId: existingUser._id.toHexString() },
+      { userId: user._id.toHexString() },
       process.env.JWT_SECRET_KEY,
       { expiresIn: '6h' }
     );
-    res.send({ token, existingUser });
+    res.status(200).json({
+      token,
+      user: {
+        nickname: user.nickname,
+        userImage: user.userImage,
+      },
+    });
   } catch (error) {
     console.error(error);
     res.status(400).send({
