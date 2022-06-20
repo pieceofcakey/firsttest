@@ -44,8 +44,7 @@ const userSchema = joi.object({
 router.post('/signup', upload.single('userImage'), async (req, res) => {
   try {
     const { email, nickname, password, passwordCheck } =
-      // await userSchema.validateAsync(req.body);
-      req.body;
+      await userSchema.validateAsync(req.body);
 
     if (password !== passwordCheck) {
       return res.status(400).send({
@@ -107,7 +106,7 @@ router.post('/login', async (req, res) => {
       process.env.JWT_SECRET_KEY,
       { expiresIn: '6h' }
     );
-    res.send({ token });
+    res.send({ token, existingUser });
   } catch (error) {
     console.error(error);
     res.status(400).send({
