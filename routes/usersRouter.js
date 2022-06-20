@@ -1,5 +1,5 @@
 const router = require('express').Router();
-// const joi = require('joi');
+const joi = require('joi');
 const jwt = require('jsonwebtoken');
 require('dotenv').config();
 const { hash, compare } = require('bcryptjs');
@@ -32,12 +32,13 @@ const upload = multer({
   }),
 });
 
-// const userSchema = joi.object({
-//   email: joi.string(),
-//   nickname: joi.string(),
-//   password: joi.string(),
-//   passwordCheck: joi.string(),
-// });
+const userSchema = joi.object({
+  email: joi.string(),
+  nickname: joi.string(),
+  password: joi.string(),
+  passwordCheck: joi.string(),
+  userImage: joi.string(),
+});
 
 //회원가입
 router.post('/signup', upload.single('userImage'), async (req, res) => {
