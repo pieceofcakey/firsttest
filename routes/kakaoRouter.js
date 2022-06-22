@@ -11,7 +11,7 @@ router.post('/auth/kakao', async (req, res) => {
   const { email, nickname } = req.body;
 
   const existsUsers = await User.findOne({ email });
-  console.log(existUsers);
+  console.log(existsUsers);
   if (existsUsers) {
     // 이미 해당 이메일이 DB에 있는 경우 DB에 new User로 새로 테이블을 만들어주지 않고 토큰만 보내준다.
     res.send({
