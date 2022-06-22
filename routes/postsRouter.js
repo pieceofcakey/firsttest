@@ -4,81 +4,87 @@ const authMiddleware = require('../middlewares/authMiddleware');
 const Post = require('../schemas/postsSchema');
 const Comment = require('../schemas/commentsSchema');
 const multer = require('multer');
-const path = require('path');
+const multerS3 = require('multer-s3');
+const aws = require('aws-sdk');
+const s3 = new aws.S3();
+const { markdownToTxt } = require('markdown-to-txt');
 
 const upload = multer({
-  dest: 'static/',
-  storage: multer.diskStorage({
-    destination(req, file, cb) {
-      cb(null, './static');
-    },
-    filename(req, file, cb) {
-      const ext = path.extname(file.originalname);
-      cb(null, path.basename(file.originalname, ext) + Date.now() + ext);
-    },
-    fileFilter: (req, file, cb) => {
-      if (['image/png', 'image/jpg', 'image/jpeg'].includes(file.mimetype))
-        cd(null, true);
-      else cd(Error('PNG, jpeg만 업로드 하세요'), false);
-    },
-    limits: {
-      fileSize: 1024 * 1024,
+  storage: multerS3({
+    s3: s3,
+    bucket: 'jerryjudymary',
+    acl: 'public-read',
+    key: function (req, file, cb) {
+      cb(null, Date.now() + '.' + file.originalname.split('.').pop()); // 이름 설정
     },
   }),
 });
 
-// 게시물 작성
-// upload.single('postImage')에서 'image'는 변수명
-// auth추가
-// router.post("/", upload.single(postImage), async(req, res) => { //posts
-//     console.log(req.file)
-//     // req.file내에는 fieldname, originalname,
-//     //encoding, destination, filename 등의 정보가 저장
-//     // 저장 성공시 asw s3 버킷에 저장
-//     const postImage = req.file.location;
-//     const createdAt = new Date().toLocaleString()
-//     // const { user } = res.locals.user
-//     // const userId = user["userId"]
-//     const userId = "TEST입니다"
-//     const { title, content, nickName} = req.body; // userId 추가해야합니다.
-//     console.log(postId);
-//     await Post.create({ title, content, nickName, postImage, userId, createdAt });
-
-//     res.json({ success: "msg"})
-
-// });
-
-// 게시물작성
+// 이미지 업로드 - 미리보기용 url 응답
 
 router.post(
-  '/',
+  '/images',
   authMiddleware,
   upload.single('postImage'),
   async (req, res) => {
-    console.log(req.body);
-    console.log(req.file);
-
-    const now = new Date();
-    const date = now.toLocaleDateString('ko-KR');
-    const hours = now.getHours();
-    const minutes = now.getMinutes();
-    const postDate = date + ' ' + hours + ':' + minutes;
-    const { nickname, userImage } = res.locals.user;
-    const { postTitle, postContent } = req.body;
-    const postImage = 'http://3.35.170.203/' + req.file.filename;
-
-    const post = await Post.create({
-      postTitle,
-      postContent,
-      nickname,
-      postDate,
-      postImage,
-      userImage,
-    });
-
-    res.status(200).json({ success: true, post });
+    try {
+      const postImage = req.file.location;
+      res.status(200).json({ success: true, postImage });
+    } catch (err) {
+      res.status(500).send({ result: 'fail' });
+    }
   }
 );
+
+// 게시글 작성
+
+router.post('/', authMiddleware, async (req, res) => {
+  const now = new Date();
+  const date = now.toLocaleDateString('ko-KR');
+  const hours = now.getHours();
+  const minutes = now.getMinutes();
+  const postDate = date + ' ' + hours + ':' + minutes;
+  const { nickname, userImage } = res.locals.user;
+  const { postTitle, postContentMd } = req.body;
+  const postContent = markdownToTxt(postContentMd);
+
+  let thumbnailImage;
+
+  if (postContentMd.includes('](https://') !== false) {
+    thumbnailImage = postContentMd.substring(
+      postContentMd.indexOf('](https://') + 2,
+      postContentMd.indexOf(')')
+    );
+  } else {
+    thumbnailImage =
+      process.env.DEFAULT_THUMBNAIL_IMG +
+      'defaultpostImage1228368893321736193.jpg';
+  }
+
+  const post = await Post.create({
+    postTitle,
+    postContentMd,
+    nickname,
+    postDate,
+    thumbnailImage,
+    userImage,
+    postContent,
+  });
+
+  res.status(200).json({ success: true, post });
+});
+
+// 복수의 url 배열 저장용
+
+/* -- postImage에 각 파일의 location을 배열로 넣어줌 --
+    const postImageArray = req.files;
+    let blankImageArray = [];
+    function LocationPusher() { for (let i = 0; i < postImageArray.length; i++) {
+        blankImageArray.push(postImageArray[i].location)
+    } return blankImageArray
+  }
+    const postImage = LocationPusher()
+    // -------------------------------------------------- */
 
 //전체 게시물 조회
 router.get('/', async (req, res) => {
@@ -123,35 +129,47 @@ router.delete('/:postId', authMiddleware, async (req, res) => {
 });
 
 // 게시글 수정
-router.put(
-  '/:postId',
-  authMiddleware,
-  upload.single('postImage'),
-  async (req, res) => {
-    ///posts/:postId
-    const { postId } = req.params;
-    const user = res.locals.user;
-    const nickname = user.nickname;
-    const { postTitle, postContent } = req.body;
 
-    const existPost = await Post.findOne({ postId: postId });
-    const postImage = 'http://3.35.170.203/' + req.file.filename;
+router.put('/:postId', authMiddleware, async (req, res) => {
+  const { postId } = req.params;
+  const user = res.locals.user;
+  const nickname = user.nickname;
+  const { postTitle, postContentMd } = req.body;
+  const postContent = markdownToTxt(postContentMd);
+  const existPost = await Post.findOne({ postId: postId });
 
-    console.log(req.file);
-    if (nickname === existPost.nickname) {
-      if (existPost) {
-        await Post.updateOne(
-          { postId: postId },
-          { $set: { postTitle, postContent, postImage } }
-        );
-        res.status(200).json({ result: 'success', postImage });
-      } else {
-        res.status(400).send({ result: 'fail' });
-      }
+  let thumbnailImage;
+
+  if (postContentMd.includes('](https://') !== false) {
+    thumbnailImage = postContentMd.substring(
+      postContentMd.indexOf('](https://') + 2,
+      postContentMd.indexOf(')')
+    );
+  } else {
+    thumbnailImage =
+      process.env.DEFAULT_THUMBNAIL_IMG +
+      'defaultpostImage1228368893321736193.jpg';
+  }
+
+  if (nickname === existPost.nickname) {
+    if (existPost) {
+      await Post.updateOne(
+        { postId: postId },
+        { $set: { postTitle, postContentMd, thumbnailImage, postContent } }
+      );
+      res.status(200).json({
+        result: 'success',
+        postTitle,
+        postContentMd,
+        thumbnailImage,
+        postContent,
+      });
     } else {
       res.status(400).send({ result: 'fail' });
     }
+  } else {
+    res.status(400).send({ result: 'fail' });
   }
-);
+});
 
 module.exports = router;

@@ -4,6 +4,9 @@ const jwt = require('jsonwebtoken');
 require('dotenv').config();
 const { hash, compare } = require('bcryptjs');
 const multer = require('multer');
+const multerS3 = require('multer-s3');
+const aws = require('aws-sdk');
+const s3 = new aws.S3();
 const path = require('path');
 const authMiddleware = require('../middlewares/authMiddleware');
 const connect = require('../schemas');
@@ -12,22 +15,15 @@ connect();
 
 // 이미지 업로드 Multer
 const upload = multer({
-  dest: 'static/',
-  storage: multer.diskStorage({
-    destination(req, file, cb) {
-      cb(null, './static');
-    },
-    filename(req, file, cb) {
-      const ext = path.extname(file.originalname);
-      cb(null, path.basename(file.originalname, ext) + Date.now() + ext);
-    },
-    fileFilter: (req, file, cb) => {
-      if (['image/png', 'image/jpg', 'image/jpeg'].includes(file.mimetype))
-        cd(null, true);
-      else cd(Error('PNG, jpeg만 업로드 하세요'), false);
-    },
-    limits: {
-      fileSize: 1024 * 1024,
+  storage: multerS3({
+    s3: s3,
+    bucket: 'jerryjudymary',
+    acl: 'public-read',
+    key: function (req, file, cb) {
+      cb(
+        null,
+        'userImage/' + Date.now() + '.' + file.originalname.split('.').pop()
+      ); // 이름 설정
     },
   }),
 });
@@ -57,9 +53,11 @@ router.post('/signup', upload.single('userImage'), async (req, res) => {
         errormessage: '이미 가입된 이메일 또는 닉네임이 있습니다.',
       });
     }
+
     const hashedPassword = await new hash(password, 10);
     if (req.file == undefined) {
-      const userImage = 'http://3.35.170.203/defaultuserImage1655721219161.png';
+      const userImage =
+        process.env.DEFAULT_USER_IMG + 'defaultuserImage1655721219161.png';
       const user = await User.create({
         email,
         nickname,
@@ -70,7 +68,7 @@ router.post('/signup', upload.single('userImage'), async (req, res) => {
         .status(200)
         .json({ success: true, message: '회원가입 성공', user, userImage });
     } else {
-      const userImage = 'http://3.35.170.203/' + req.file.filename;
+      const userImage = req.file.location;
       const user = await User.create({
         userImage,
         email,
