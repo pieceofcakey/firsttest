@@ -3,6 +3,7 @@ const User = require('../schemas/usersSchema');
 require('dotenv').config();
 
 module.exports = (req, res, next) => {
+  console.log(req.headers);
   const { authorization } = req.headers;
 
   const [tokenType, tokenValue] = (authorization || '').split(' ');
