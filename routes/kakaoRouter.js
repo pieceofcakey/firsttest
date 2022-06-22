@@ -12,23 +12,25 @@ router.post('/auth/kakao', async (req, res) => {
 
   const existsUsers = await User.findOne({ email });
   console.log(existsUsers);
-  if (existsUsers) {
-    // 이미 해당 이메일이 DB에 있는 경우 DB에 new User로 새로 테이블을 만들어주지 않고 토큰만 보내준다.
-    res.send({
-      result: true,
-      token: jwt.sign({ email: existsUsers.email }, JWT_SECRET_KEY),
-    });
-    return;
-  } else {
-    const user = await User.create({
-      nickname,
-      email,
-    });
-    return res.send({
-      result: true,
-      token: jwt.sign({ email: user.email }, JWT_SECRET_KEY),
-    });
-  }
+  // if (existsUsers) {
+  // 이미 해당 이메일이 DB에 있는 경우 DB에 new User로 새로 테이블을 만들어주지 않고 토큰만 보내준다.
+  // res.send({
+  //   result: true,
+  //   token: jwt.sign({ email: existsUsers.email }, JWT_SECRET_KEY),
+  // });
+  // return;
+  // }
+  // else {
+  const user = await User.create({
+    nickname,
+    email,
+  });
+  // return
+  res.send({
+    result: true,
+    token: jwt.sign({ email: user.email }, JWT_SECRET_KEY),
+  });
+  // }
   // await user.save();
 });
 
