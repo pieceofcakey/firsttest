@@ -39,6 +39,7 @@ router.post(
 // 게시글 작성
 
 router.post('/', authMiddleware, async (req, res) => {
+  console.log(res.locals.user);
   const now = new Date();
   const date = now.toLocaleDateString('ko-KR');
   const hours = now.getHours();
