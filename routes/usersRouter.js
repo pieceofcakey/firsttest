@@ -119,7 +119,7 @@ router.post('/login', async (req, res) => {
   }
 });
 
-router.get('/auth', authMiddleware, async (req, res) => {
+router.get('/auth', authMiddleware, (req, res) => {
   try {
     console.log(res.locals);
     const { user } = res.locals;
