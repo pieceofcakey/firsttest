@@ -7,6 +7,7 @@ const { JWT_SECRET_KEY } = process.env;
 // 로그인 정보 저장 + 토큰 발급
 
 router.post('/auth/kakao', async (req, res) => {
+  console.log(req.body);
   const { email, nickname } = req.body;
 
   const existsUsers = await User.findOne({ email });
