@@ -16,10 +16,7 @@ router.post('/auth/kakao', async (req, res) => {
     // 이미 해당 이메일이 DB에 있는 경우 DB에 new User로 새로 테이블을 만들어주지 않고 토큰만 보내준다.
     return res.send({
       result: true,
-      token: jwt.sign(
-        { userId: existsUsers._id.toHexString() },
-        JWT_SECRET_KEY
-      ),
+      token: jwt.sign({ email: existsUsers.email }, JWT_SECRET_KEY),
     });
   } else {
     const user = await User.create({
@@ -29,7 +26,7 @@ router.post('/auth/kakao', async (req, res) => {
     });
     return res.send({
       result: true,
-      token: jwt.sign({ userId: user._id.toHexString() }, JWT_SECRET_KEY),
+      token: jwt.sign({ email: user.email }, JWT_SECRET_KEY),
     });
   }
   // await user.save();
