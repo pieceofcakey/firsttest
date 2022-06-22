@@ -18,15 +18,17 @@ router.post('/auth/kakao', async (req, res) => {
       token: jwt.sign({ email: existsUsers.email }, JWT_SECRET_KEY),
     });
     return;
+  } else {
+    const user = await User.create({
+      nickname,
+      email,
+    });
+    return res.send({
+      result: true,
+      token: jwt.sign({ email: user.email }, JWT_SECRET_KEY),
+    });
   }
-
-  const user = new User({ email, nickname });
-  await user.save();
-
-  res.send({
-    result: true,
-    token: jwt.sign({ email: user.email }, JWT_SECRET_KEY),
-  });
+  // await user.save();
 });
 
 module.exports = router;
