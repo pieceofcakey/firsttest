@@ -1,12 +1,12 @@
 const express = require('express');
-// const helmet = require('helmet');
+const helmet = require('helmet');
 const cors = require('cors');
 const app = express();
 require('dotenv').config();
 const connect = require('./schemas');
 
 app.use(cors({ origin: true, credentials: true }));
-// app.use(helmet({ contentSecurityPolicy: false }));
+app.use(helmet({ contentSecurityPolicy: false }));
 connect();
 app.use(express.urlencoded({ extended: false }));
 app.use(express.json());
