@@ -24,7 +24,7 @@ const upload = multer({
 
 router.post(
   '/images',
-  authMiddleware,
+  // authMiddleware,
   upload.single('postImage'),
   async (req, res) => {
     try {
