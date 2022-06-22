@@ -4,6 +4,7 @@ const cors = require('cors');
 const app = express();
 require('dotenv').config();
 const connect = require('./schemas');
+
 app.use(cors({ origin: true, credentials: true }));
 app.use(helmet({ contentSecurityPolicy: false }));
 connect();
@@ -12,6 +13,7 @@ app.use(express.json());
 app.use('/api/comments', require('./routes/commentsRouter.js'));
 app.use('/api/posts', require('./routes/postsRouter.js'));
 app.use('/api', require('./routes/usersRouter.js'));
+app.use('/api', require('./routes/kakaoRouter'));
 app.use(express.static('static'));
 
 app.use((req, res, next) => {

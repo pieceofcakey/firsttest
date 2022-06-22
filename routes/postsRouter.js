@@ -79,11 +79,14 @@ router.post('/', authMiddleware, async (req, res) => {
 /* -- postImage에 각 파일의 location을 배열로 넣어줌 --
     const postImageArray = req.files;
     let blankImageArray = [];
+
     function LocationPusher() { for (let i = 0; i < postImageArray.length; i++) {
         blankImageArray.push(postImageArray[i].location)
     } return blankImageArray
   }
     const postImage = LocationPusher()
+
+
     // -------------------------------------------------- */
 
 //전체 게시물 조회
